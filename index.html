@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+
+    <script src="three.js"></script>
+
+    <script type="x-shader/x-vertex" id="vertexShader">
+        void main() 
+{
+	vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+	gl_Position = projectionMatrix * modelViewPosition;
+}
+</script>
+    <script type="x-shader/x-fragment" id="fragmentShader">
+        void main() {
+	gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+
+    <script type="x-shader/x-vertex" id="vertexShader2">
+        attribute float vertexDisplacement;
+uniform float delta;
+varying float vOpacity;
+varying vec3 vUv;
+
+void main() 
+{
+    vUv = position;
+    vOpacity = vertexDisplacement;
+
+    vec3 p = position;
+
+    p.x += sin(vertexDisplacement) * 50.0;
+    p.y += cos(vertexDisplacement) * 50.0;
+
+	vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
+	gl_Position = projectionMatrix * modelViewPosition;
+}
+</script>
+    <script type="x-shader/x-fragment" id="fragmentShader2">
+        uniform float delta;
+varying float vOpacity;
+varying vec3 vUv;
+
+void main() {
+
+    float r = 1.0;
+    float g = 0.0;
+    float b = 0.5;
+    vec3 rgb = vec3(r, g, b);
+
+	gl_FragColor = vec4(rgb, vOpacity);
+}
+</script>
+
+
+    <script>
+        var renderer,
+            scene,
+            camera,
+            myCanvas = document.getElementById('myCanvas');
+
+        renderer = new THREE.WebGLRenderer({
+            canvas: myCanvas,
+            antialias: true
+        });
+        renderer.setClearColor(0xCBEFFF);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 300, 10000);
+
+        scene = new THREE.Scene();
+
+        var light = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(light);
+
+        var light2 = new THREE.PointLight(0xffffff, 0.5);
+        scene.add(light2);
+
+
+
+
+        var customUniforms = {
+            delta: {
+                value: 0
+            }
+        };
+        var material = new THREE.ShaderMaterial({
+            uniforms: customUniforms,
+            vertexShader: document.getElementById('vertexShader2').textContent,
+            fragmentShader: document.getElementById('fragmentShader2').textContent
+        });
+
+        var geometry = new THREE.BoxBufferGeometry(100, 100, 100, 10, 10, 10);
+        var mesh = new THREE.Mesh(geometry, material);
+        mesh.position.z = -1000;
+        mesh.position.x = -100;
+        scene.add(mesh);
+
+
+        var cubegeometry = new THREE.BoxGeometry(100, 100, 100);
+        var cubemesh = new THREE.Mesh(cubegeometry, material);
+        cubemesh.position.set(150, 0, -1000);
+        scene.add(cubemesh);
+        render();
+
+
+        var delta = 0;
+
+        function render() {
+
+            delta += 0.1;
+            mesh.material.uniforms.delta.value = 0.5 + Math.sin(delta) * 0.5;
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+    </script>
+</body>
+</html>
+
+
+
